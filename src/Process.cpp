@@ -146,8 +146,7 @@ namespace memstream {
             if (!buf) continue;
             if (!len) continue;
 
-            DWORD memoryPrepared = NULL;
-            if (!VMMDLL_Scatter_PrepareEx(this->scatter, addr, len, buf, &memoryPrepared))  {
+            if (!VMMDLL_Scatter_PrepareEx(this->scatter, addr, len, buf, nullptr))  {
                 // failed to prep a read
                 // return failed
                 success = false;
