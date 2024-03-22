@@ -34,6 +34,32 @@
 #include <MemStream/FPGA.h>
 
 namespace memstream {
+    class MEMSTREAM_API ScatterOp {
+    public:
+        ScatterOp(uint64_t address, uint32_t size);
+        ScatterOp(uint64_t address, uint8_t* buffer, uint32_t size);
+        ~ScatterOp();
+
+        inline bool Valid() const {
+            return address && buffer && size;
+        }
+
+        inline bool PrepareRead(VMMDLL_SCATTER_HANDLE hScatter) {
+            return VMMDLL_Scatter_PrepareEx(hScatter, this->address, this->size, this->buffer, (PDWORD)&this->cbRead);
+        }
+        inline bool PrepareWrite(VMMDLL_SCATTER_HANDLE hScatter) {
+            return VMMDLL_Scatter_PrepareWriteEx(hScatter, this->address, this->buffer, this->size);
+        }
+
+        uint64_t address = 0;
+        uint8_t* buffer = nullptr;
+        uint32_t size = 0;
+        // TODO: update this var for usage in writes...
+        uint32_t cbRead = 0;
+    private:
+        bool allocated = false;
+    };
+
 
     class MEMSTREAM_API Process {
     public:
@@ -66,7 +92,7 @@ namespace memstream {
 
          bool ExecuteStagedReads();
 
-         bool ReadMany(std::list<std::tuple<uint64_t, uint8_t *, uint32_t>> &readOps);
+         bool ReadMany(std::list<ScatterOp> &reads);
 
         // writes
 
@@ -87,7 +113,7 @@ namespace memstream {
 
          bool ExecuteStagedWrites();
 
-         bool WriteMany(std::list<std::tuple<uint64_t, uint8_t *, uint32_t>> &writeOps);
+         bool WriteMany(std::list<ScatterOp> &writeOps);
 
         // info stuff
 
@@ -130,6 +156,9 @@ namespace memstream {
         uint32_t getPid() const;
         const char* getName() const;
 
+
+        
+
     protected:
         VMMDLL_PROCESS_INFORMATION info;
         VMMDLL_SCATTER_HANDLE scatter;
@@ -139,11 +168,14 @@ namespace memstream {
 
 
 
-        std::list<std::tuple<uint64_t, uint8_t *, uint32_t>> stagedReads;
-        std::list<std::tuple<uint64_t, uint8_t *, uint32_t>> stagedWrites;
+        std::list<ScatterOp> stagedReads;
+        std::list<ScatterOp> stagedWrites;
 
         static std::vector<std::tuple<uint8_t, bool>> parsePattern(const std::string &pattern);
     };
+
+
+    
 
 } // memstream
 

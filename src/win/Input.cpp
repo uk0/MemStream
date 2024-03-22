@@ -93,9 +93,9 @@ namespace memstream::windows {
         this->prevPos = this->cursorPos;
 
         // scatter read these values
-        std::list<std::tuple<uint64_t, uint8_t *, uint32_t>> reads = {
-                {this->gafAsyncKeyStateAddr, (uint8_t *) &this->state,     sizeof(uint8_t[64])},
-                {this->gptCursorAsync,       (uint8_t *) &this->cursorPos, sizeof(MousePoint)},
+        std::list<memstream::ScatterOp> reads = {
+            memstream::ScatterOp(this->gafAsyncKeyStateAddr, (uint8_t *) &this->state, sizeof(uint8_t[64])),
+            memstream::ScatterOp(this->gptCursorAsync, (uint8_t *) &this->cursorPos, sizeof(MousePoint)),
         };
 
         if (!this->kernel->ReadMany(reads))
